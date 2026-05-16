@@ -1,0 +1,117 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitive Definition
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Generic schema validation helpers
+    function isValidProduct(data) {
+      return data.keys().hasAll(['userId', 'name', 'costPrice', 'sellingPrice', 'stock', 'minStockThreshold']) &&
+             data.userId == request.auth.uid &&
+             data.name is string && data.name.size() <= 200 &&
+             data.costPrice is number && data.costPrice >= 0 &&
+             data.sellingPrice is number && data.sellingPrice >= 0 &&
+             data.stock is number &&
+             data.minStockThreshold is number && data.minStockThreshold >= 0;
+    }
+
+    function isValidSale(data) {
+      return data.keys().hasAll(['userId', 'productId', 'productName', 'quantity', 'totalSale', 'totalCost', 'totalProfit', 'paymentMethod', 'date']) &&
+             data.userId == request.auth.uid &&
+             data.productId is string && isValidId(data.productId) &&
+             data.quantity is number && data.quantity > 0 &&
+             data.totalSale is number &&
+             data.totalProfit is number &&
+             data.paymentMethod in ['Tunai', 'Transfer'];
+    }
+
+    function isValidExpense(data) {
+      return data.keys().hasAll(['userId', 'category', 'amount', 'date']) &&
+             data.userId == request.auth.uid &&
+             data.category in ['Listrik', 'Gaji', 'Sewa Toko', 'Lainnya'] &&
+             data.amount is number && data.amount >= 0;
+    }
+
+    function isValidDebt(data) {
+      return data.keys().hasAll(['userId', 'type', 'contactName', 'amount', 'status', 'createdAt']) &&
+             data.userId == request.auth.uid &&
+             data.type in ['Hutang', 'Piutang'] &&
+             data.status in ['Belum Lunas', 'Lunas'] &&
+             data.amount is number && data.amount >= 0;
+    }
+
+    function isValidStockOpname(data) {
+      return data.keys().hasAll(['userId', 'productId', 'systemStock', 'physicalStock', 'difference', 'date']) &&
+             data.userId == request.auth.uid &&
+             data.productId is string &&
+             data.difference is number;
+    }
+
+    // 1. Products
+    match /products/{productId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidProduct(incoming());
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid && isValidProduct(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'category', 'costPrice', 'sellingPrice', 'stock', 'minStockThreshold', 'updatedAt'])
+      );
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // 2. Sales
+    match /sales/{saleId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidSale(incoming()) && 
+                    exists(/databases/$(database)/documents/products/$(incoming().productId));
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid && isValidSale(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['quantity', 'totalSale', 'totalCost', 'totalProfit', 'paymentMethod'])
+      );
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // 3. Expenses
+    match /expenses/{expenseId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidExpense(incoming());
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid && isValidExpense(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['category', 'amount', 'description', 'date'])
+      );
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // 4. Debts
+    match /debts/{debtId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidDebt(incoming());
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid && isValidDebt(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'amount', 'contactName', 'dueDate', 'notes'])
+      );
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // 5. Stock Opnames
+    match /stock_opnames/{opnameId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidStockOpname(incoming());
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}

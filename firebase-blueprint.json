@@ -1,0 +1,104 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Master data for products",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner of the record" },
+        "name": { "type": "string", "description": "Name of the product" },
+        "category": { "type": "string", "description": "Category of the clothing item" },
+        "costPrice": { "type": "number", "description": "Buy/Modal price" },
+        "sellingPrice": { "type": "number", "description": "Sell price" },
+        "stock": { "type": "number", "description": "Current stock quantity" },
+        "minStockThreshold": { "type": "number", "description": "Minimum stock level before notification", "default": 5 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "costPrice", "sellingPrice", "stock", "minStockThreshold"]
+    },
+    "Sale": {
+      "title": "Sale",
+      "description": "Transaction records for sales",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner of the record" },
+        "productId": { "type": "string", "description": "ID of the product sold" },
+        "productName": { "type": "string", "description": "Name of the product (denormalized)" },
+        "quantity": { "type": "number", "description": "Quantity sold" },
+        "totalSale": { "type": "number", "description": "Total revenue from this line" },
+        "totalCost": { "type": "number", "description": "Total modal/cost for this line" },
+        "totalProfit": { "type": "number", "description": "Profit for this line" },
+        "paymentMethod": { "type": "string", "enum": ["Tunai", "Transfer"] },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "productId", "quantity", "totalSale", "totalCost", "totalProfit", "paymentMethod", "date"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Operational costs",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner of the record" },
+        "category": { "type": "string", "enum": ["Listrik", "Gaji", "Sewa Toko", "Lainnya"] },
+        "amount": { "type": "number", "description": "Expense amount" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "category", "amount", "date"]
+    },
+    "Debt": {
+      "title": "Debt",
+      "description": "Debts or receivables records",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner of the record" },
+        "type": { "type": "string", "enum": ["Hutang", "Piutang"] },
+        "contactName": { "type": "string", "description": "Customer or supplier name" },
+        "amount": { "type": "number" },
+        "dueDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["Belum Lunas", "Lunas"] },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "type", "contactName", "amount", "status", "createdAt"]
+    },
+    "StockOpname": {
+      "title": "Stock Opname",
+      "description": "Stock checking records",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner of the record" },
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "systemStock": { "type": "number" },
+        "physicalStock": { "type": "number" },
+        "difference": { "type": "number" },
+        "date": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" }
+      },
+      "required": ["userId", "productId", "systemStock", "physicalStock", "difference", "date"]
+    }
+  },
+  "firestore": {
+    "products": {
+      "schema": "Product",
+      "description": "Collection of products"
+    },
+    "sales": {
+      "schema": "Sale",
+      "description": "Collection of sales transactions"
+    },
+    "expenses": {
+      "schema": "Expense",
+      "description": "Collection of operational expenses"
+    },
+    "debts": {
+      "schema": "Debt",
+      "description": "Collection of debts and receivables"
+    },
+    "stock_opnames": {
+      "schema": "StockOpname",
+      "description": "Collection of stock adjustments"
+    }
+  }
+}

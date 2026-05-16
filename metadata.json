@@ -1,0 +1,6 @@
+{
+  "name": "Profitly UMKM",
+  "description": "Aplikasi monitoring profitabilitas UMKM dengan modul master barang, penjualan, biaya operasional, hutang/piutang, dan stok opname.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
