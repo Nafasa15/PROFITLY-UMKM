@@ -24,10 +24,16 @@ export default function Products() {
   useEffect(() => {
     if (!auth.currentUser) return;
     const q = query(collection(db, 'products'), where('userId', '==', auth.currentUser.uid));
-    const unsub = onSnapshot(q, (snapshot) => {
-      setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
-      setLoading(false);
-    });
+    const unsub = onSnapshot(q, 
+      (snapshot) => {
+        setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Products error:", error);
+        setLoading(false);
+      }
+    );
     return unsub;
   }, []);
 

@@ -36,20 +36,25 @@ export default function Dashboard() {
 
     // Stats and Chart data fetch
     const fetchFullData = async () => {
-      const salesQueryAll = query(collection(db, 'sales'), where('userId', '==', uid));
-      const expensesQuery = query(collection(db, 'expenses'), where('userId', '==', uid));
-      const productsQuery = query(collection(db, 'products'), where('userId', '==', uid));
+      try {
+        const salesQueryAll = query(collection(db, 'sales'), where('userId', '==', uid));
+        const expensesQuery = query(collection(db, 'expenses'), where('userId', '==', uid));
+        const productsQuery = query(collection(db, 'products'), where('userId', '==', uid));
 
-      const [salesSnap, expensesSnap, productsSnap] = await Promise.all([
-        getDocs(salesQueryAll),
-        getDocs(expensesQuery),
-        getDocs(productsQuery)
-      ]);
+        const [salesSnap, expensesSnap, productsSnap] = await Promise.all([
+          getDocs(salesQueryAll),
+          getDocs(expensesQuery),
+          getDocs(productsQuery)
+        ]);
 
-      setAllSales(salesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Sale)));
-      setExpenses(expensesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense)));
-      setProducts(productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
-      setLoading(false);
+        setAllSales(salesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Sale)));
+        setExpenses(expensesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense)));
+        setProducts(productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
+      } catch (error) {
+        console.error("Dashboard data fetch error:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchFullData();

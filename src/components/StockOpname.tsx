@@ -18,14 +18,25 @@ export default function StockOpname() {
     if (!auth.currentUser) return;
     const uid = auth.currentUser.uid;
     const qProducts = query(collection(db, 'products'), where('userId', '==', uid));
-    const unsubProducts = onSnapshot(qProducts, (snapshot) => {
-      setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
-      setLoading(false);
-    });
+    const unsubProducts = onSnapshot(qProducts, 
+      (snapshot) => {
+        setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Products listen error (Opname):", error);
+        setLoading(false);
+      }
+    );
     const qHistory = query(collection(db, 'stock_opnames'), where('userId', '==', uid), orderBy('date', 'desc'));
-    const unsubHistory = onSnapshot(qHistory, (snapshot) => {
-      setHistory(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as OpnameType)));
-    });
+    const unsubHistory = onSnapshot(qHistory, 
+      (snapshot) => {
+        setHistory(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as OpnameType)));
+      },
+      (error) => {
+        console.error("History listen error (Opname):", error);
+      }
+    );
     return () => { unsubProducts(); unsubHistory(); };
   }, []);
 

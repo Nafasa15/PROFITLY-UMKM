@@ -23,14 +23,25 @@ export default function Sales() {
     if (!auth.currentUser) return;
     const uid = auth.currentUser.uid;
     const qSales = query(collection(db, 'sales'), where('userId', '==', uid), orderBy('date', 'desc'));
-    const unsubSales = onSnapshot(qSales, (snapshot) => {
-      setSales(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Sale)));
-    });
+    const unsubSales = onSnapshot(qSales, 
+      (snapshot) => {
+        setSales(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Sale)));
+      },
+      (error) => {
+        console.error("Sales listen error:", error);
+      }
+    );
     const qProducts = query(collection(db, 'products'), where('userId', '==', uid));
-    const unsubProducts = onSnapshot(qProducts, (snapshot) => {
-      setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
-      setLoading(false);
-    });
+    const unsubProducts = onSnapshot(qProducts, 
+      (snapshot) => {
+        setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Products listen error (Sales):", error);
+        setLoading(false);
+      }
+    );
     return () => { unsubSales(); unsubProducts(); };
   }, []);
 

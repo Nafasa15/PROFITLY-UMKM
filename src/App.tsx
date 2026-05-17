@@ -58,11 +58,16 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
     const q = query(collection(db, 'products'), where('userId', '==', user.uid));
-    const unsub = onSnapshot(q, (snapshot) => {
-      const allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-      const lowStock = allProducts.filter(p => p.stock <= (p.minStockThreshold || 5));
-      setLowStockProducts(lowStock);
-    });
+    const unsub = onSnapshot(q, 
+      (snapshot) => {
+        const allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+        const lowStock = allProducts.filter(p => p.stock <= (p.minStockThreshold || 5));
+        setLowStockProducts(lowStock);
+      },
+      (error) => {
+        console.error("Critical: Stock monitoring failed:", error);
+      }
+    );
     return unsub;
   }, [user]);
 

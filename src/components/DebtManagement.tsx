@@ -22,10 +22,16 @@ export default function DebtManagement() {
   useEffect(() => {
     if (!auth.currentUser) return;
     const q = query(collection(db, 'debts'), where('userId', '==', auth.currentUser.uid), orderBy('createdAt', 'desc'));
-    const unsub = onSnapshot(q, (snapshot) => {
-      setDebts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Debt)));
-      setLoading(false);
-    });
+    const unsub = onSnapshot(q, 
+      (snapshot) => {
+        setDebts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Debt)));
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Debts listen error:", error);
+        setLoading(false);
+      }
+    );
     return unsub;
   }, []);
 

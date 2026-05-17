@@ -21,10 +21,16 @@ export default function Expenses() {
   useEffect(() => {
     if (!auth.currentUser) return;
     const q = query(collection(db, 'expenses'), where('userId', '==', auth.currentUser.uid), orderBy('date', 'desc'));
-    const unsub = onSnapshot(q, (snapshot) => {
-      setExpenses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense)));
-      setLoading(false);
-    });
+    const unsub = onSnapshot(q, 
+      (snapshot) => {
+        setExpenses(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense)));
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Expenses listen error:", error);
+        setLoading(false);
+      }
+    );
     return unsub;
   }, []);
 
