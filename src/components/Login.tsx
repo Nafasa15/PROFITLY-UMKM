@@ -19,7 +19,11 @@ export default function Login() {
 
   // We internally treat username as part of an email to satisfy Firebase Auth
   const INTERNAL_DOMAIN = 'profitly-umkm.id';
-  const getEmail = (u: string) => `${u.toLowerCase().trim()}@${INTERNAL_DOMAIN}`;
+  const getEmail = (u: string) => {
+    const trimmed = u.toLowerCase().trim();
+    if (trimmed.includes('@')) return trimmed;
+    return `${trimmed}@${INTERNAL_DOMAIN}`;
+  };
 
   const handleAnonymousLogin = async () => {
     setError(null);
@@ -65,14 +69,18 @@ export default function Login() {
       }
     } catch (err: any) {
       console.error("Auth Error:", err);
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setError('Username atau Password salah. (Pastikan Email/Password sudah aktif di Firebase Console)');
+      if (err.code === 'auth/user-not-found') {
+        setError('Username tidak ditemukan. Silakan klik "Daftar Sekarang" jika belum punya akun.');
+      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setError('Username atau Password salah. Jika ini akun baru, pastikan Anda sudah klik "Daftar".');
       } else if (err.code === 'auth/email-already-in-use') {
-        setError('Username ini sudah terdaftar');
+        setError('Username ini sudah terdaftar. Silakan "Masuk" atau gunakan username lain.');
       } else if (err.code === 'auth/operation-not-allowed') {
-        setError('Fitur Login ini belum diaktifkan di Firebase Console (Authentication > Providers)');
+        setError('Fitur Login ini belum diaktifkan di Firebase. Pastikan Email/Password & Anonymous auth sudah ON.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Format username tidak valid. Jangan gunakan spasi/karakter aneh.');
       } else {
-        setError('Terjadi kesalahan. Silakan coba lagi.');
+        setError(`Terjadi kesalahan: ${err.message || 'Coba lagi nanti'}`);
       }
     } finally {
       setLoading(false);
@@ -80,7 +88,7 @@ export default function Login() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-50 p-4 font-sans">
+    <div className="min-h-screen w-screen flex flex-col items-center justify-center bg-slate-50 p-4 font-sans py-12">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
