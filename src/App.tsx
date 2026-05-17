@@ -22,12 +22,14 @@ import {
   ChevronRight,
   Bell,
   AlertTriangle,
-  X as CloseIcon
+  X as CloseIcon,
+  User as UserIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product } from './types';
 
 // Components
+import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Products from './components/Products';
 import Sales from './components/Sales';
@@ -64,15 +66,6 @@ export default function App() {
     return unsub;
   }, [user]);
 
-  const handleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Login failed:", error);
-    }
-  };
-
   const handleLogout = () => signOut(auth);
 
   if (loading) {
@@ -84,25 +77,7 @@ export default function App() {
   }
 
   if (!user) {
-    return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-200">
-          <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-200">
-            <span className="text-white font-bold text-3xl">P</span>
-          </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">PROFITLY <span className="text-emerald-500">UMKM</span></h1>
-          <p className="text-slate-500 mb-8 font-medium">Solusi Monitoring Profitabilitas Bisnis Anda</p>
-          <button 
-            onClick={handleLogin}
-            className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-3 shadow-lg"
-          >
-            <img src="https://www.google.com/favicon.ico" className="w-5 h-5 invert" alt="Google" />
-            Masuk dengan Google
-          </button>
-          <p className="mt-6 text-xs text-slate-400">Silakan login untuk mengakses data keuangan toko Anda.</p>
-        </div>
-      </div>
-    );
+    return <Login />;
   }
 
   const menuItems = [
@@ -145,10 +120,18 @@ export default function App() {
         <div className="p-6 mt-auto border-t border-slate-800 bg-slate-900/50">
           <div id="user-profile-card" className="bg-slate-800/50 rounded-2xl p-4 mb-4 border border-slate-700">
             <div className="flex items-center gap-3 mb-1">
-              <img src={user.photoURL || ''} className="w-8 h-8 rounded-lg border border-slate-600" alt="Avatar" />
+              {user.photoURL ? (
+                <img src={user.photoURL} className="w-8 h-8 rounded-lg border border-slate-600" alt="Avatar" />
+              ) : (
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                  <UserIcon className="w-4 h-4" />
+                </div>
+              )}
               <div className="overflow-hidden">
                 <p className="text-xs text-slate-400 truncate">Admin Toko</p>
-                <p className="text-sm text-white font-bold truncate">{user.displayName || 'User'}</p>
+                <p className="text-sm text-white font-bold truncate">
+                  {user.displayName || user.email?.split('@')[0] || 'User'}
+                </p>
               </div>
             </div>
           </div>
